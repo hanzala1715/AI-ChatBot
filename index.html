@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Chatbot</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+
+        .chat-container {
+            width: 400px;
+            max-width: 100%;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background: linear-gradient(135deg, #50312c 0%, #9d72b1 100%);
+            height: 550px;
+        }
+
+        .chat-box {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 10px;
+            flex-grow: 1;
+            margin-bottom: 15px;
+            overflow-y: auto;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color: #4CAF50;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .bot-message {
+            background-color: #007BFF;
+            color: white;
+            align-self: flex-start;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            padding-top: 10px;
+        }
+
+        .user-input {
+            flex-grow: 1;
+            padding: 12px;
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            margin-right: 10px;
+            font-size: 16px;
+            background-color: #fff;
+        }
+
+        .send-btn {
+            background-color: #007BFF;
+            color: white;
+            padding: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        .send-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .send-btn:focus {
+            outline: none;
+        }
+
+        @media (max-width: 480px) {
+            .chat-container {
+                width: 100%;
+                height: 450px;
+            }
+
+            .user-input {
+                font-size: 14px;
+            }
+
+            .send-btn {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-box" id="chatBox"></div>
+        <div class="input-container">
+            <input type="text" id="userInput" class="user-input" placeholder="Type a message..." />
+            <button class="send-btn" onclick="sendMessage()">🔵</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        let voices = [];
+
+        // Predefined responses
+        const responses = {
+            "hi": "Hello! How can I help you today?",
+            "hello": "Hi there! How can I assist you today?",
+            "how are you": "I'm just a chatbot, but I'm doing great! How about you?",
+            "what is your name": "I am your friendly chatbot!",
+            "bye": "Goodbye! Have a great day!",
+            "thank you": "You're welcome! Let me know if you need anything else.",
+            "what is your purpose": "My purpose is to assist you with any questions or tasks you have.",
+            "how old are you": "I don't have an age, but I was created recently!",
+            "what can you do": "I can answer your questions and have basic conversations with you.",
+            "can you tell me a joke": "Sure! Why don’t skeletons fight each other? They don’t have the guts!",
+            "who created you": "I was created by a developer using HTML, JavaScript, and AI-powered technologies.",
+            "default": "Sorry, I don't understand that. Can you try asking something else?"
+        };
+
+        // Function to send a message
+        function sendMessage() {
+            const userMessage = userInput.value.trim();
+            if (userMessage) {
+                appendMessage("You", userMessage, "user-message"); // Display user message
+                userInput.value = ""; // Clear the input field
+                setTimeout(() => {
+                    const botResponse = getBotResponse(userMessage.toLowerCase());
+                    appendMessage("Bot", botResponse, "bot-message"); // Display bot response
+                    speakResponse(botResponse); // Convert text response to speech
+                }, 500);
+            }
+        }
+
+        // Function to append messages to the chat box
+        function appendMessage(sender, message, className) {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `${sender}: ${message}`;
+            messageElement.classList.add('message', className);
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to the latest message
+        }
+
+        // Function to get a bot response
+        function getBotResponse(userMessage) {
+            return responses[userMessage] || responses["default"];
+        }
+
+        // Function to make the bot talk using Web Speech API
+        function speakResponse(response) {
+            const speech = new SpeechSynthesisUtterance(response);
+            speech.lang = 'en-US';
+            speech.volume = 1;
+            speech.rate = 1;
+            speech.pitch = 1; // Female voice is the default
+
+            // Select the first female voice available
+            speech.voice = voices.find(voice => voice.name.includes('female')) || voices[0];
+            window.speechSynthesis.speak(speech);
+        }
+
+        // Get available voices and update the voices array
+        function loadVoices() {
+            voices = window.speechSynthesis.getVoices();
+            // Wait for voices to load (sometimes takes time)
+            if (voices.length === 0) {
+                setTimeout(loadVoices, 100); // Retry if voices haven't loaded yet
+            }
+        }
+
+        // Initialize voices on page load
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices();
+
+        // Allow Enter key to send messages
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
